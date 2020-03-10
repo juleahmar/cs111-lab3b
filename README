@@ -1,0 +1,10 @@
+NAME: Karl Marrett,Jules Ahmar
+EMAIL: kdmarrett@gmail.com,juleahmar@g.ucla.edu
+ID: 705225374,205301445
+
+
+lab3b.py:
+    -python source file that analyzes the inputted csv file to search for discrepancies
+
+Makefile:
+    -supports 3 targets: default, dist, and clean
