@@ -16,10 +16,64 @@ ifrees = []
 bfrees = []
 g_s = []
 
+blocks = 0
+exist = {}
+
 rb = set([0, 1, 2, 3, 4, 5, 6, 7, 64])
 
 def block_check():
     #do stuff
+    for i in idir_s:
+        
+
+    for i in ino_s:
+        for b in range(len(i.block_address)):
+            node = i.block_address[b]
+            if node in bfrees:
+                err_flag = 1
+                print('ALLOCATED BLOCK ' + str(node) + ' ON FREELIST')
+            else:
+                ofst = 0
+                t = ""
+                if node > blocks or node < 0:
+                    if b == 14:
+                        print('INVALID TRIPLE INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 65804')
+                        t = "TRIPLE INDIRECT BLOCK"
+                        ofst = 65804
+                        err_flag = 1
+                    elif b == 13:
+                        print('INVALID DOUBLE INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 268')
+                        t = "DOUBLE INDIRECT BLOCK"
+                        ofst = 268
+                        err_flag = 1
+                    elif b == 12:
+                        print('INVALID INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 12')
+                        t = "INDIRECT BLOCK"
+                        ofst = 12
+                        err_flag = 1
+                if node in rb:
+                    if b == 14:
+                        print('RESERVED TRIPLE INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 65804')
+                        t = "TRIPLE INDIRECT BLOCK"
+                        ofst = 65804
+                        err_flag = 1
+                    elif b == 13:
+                        print('RESERVED DOUBLE INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 268')
+                        t = "DOUBLE INDIRECT BLOCK"
+                        ofst = 268
+                        err_flag = 1
+                    elif b == 12:
+                        print('RESERVED INDIRECT BLOCK IN INODE ' + str(node) + ' AT OFFSET 12')
+                        t = "INDIRECT BLOCK"
+                        ofst = 12
+                        err_flag = 1
+                if node not in rb and node >= 0 and node <= blocks and b not in exist:
+                    exist[node] = []
+                    exist[node].append(block(t, node, i.inode_number, ofst))
+                else:
+                    exist[node].append(block(t, node, i.inode_number, ofst))
+                     
+
 
 def inode_check():
     #do stuff
