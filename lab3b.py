@@ -4,6 +4,7 @@
 
 import sys
 import csv
+import pdb
 
 #set to 1 if we need to exit(2)
 err_flag = 0
@@ -24,6 +25,7 @@ rb = set([0, 1, 2, 3, 4, 5, 6, 7, 64])
 def block_check():
     #do stuff
     for i in idir_s:
+        continue;
         
 
     for i in ino_s:
@@ -76,10 +78,28 @@ def block_check():
 
 
 def inode_check():
-    #do stuff
+    for inode in ino_s:
+        if inode.file_type in ('f', 'd', 's'):
+            # should not be in the free list
+            if inode.inode_number in ifrees:
+                print("ALLOCATED INODE %d ON FREELIST" % inode.inode_number)
+        else:
+            # asserting because I'm not sure if this edge case needs
+            # to be handled yet
+            assert(inode.file_type is '0')
+            if inode.inode_number not in ifrees:
+                print("UNALLOCATED INODE %d NOT ON FREELIST" % inode.inode_number)
 
 def dir_check():
-    #do stuff
+    # spec:
+    # Every allocated I-node should be referred to by the number of directory
+    # entries that is equal to the reference count recorded in the I-node. 
+
+    # For any allocated I-node whose reference count does not match the number
+    # of discovered links, an error message like the following should be
+    # generated to stdout:
+    return
+
 
 class superblock:
     def __init__(self, arg1, arg2, arg3, arg4, arg5, arg6, arg7): 
@@ -158,10 +178,10 @@ def main():
             sb = superblock(int(i[1]), int(i[2]), int(i[3]), int(i[4]), int(i[5]), int(i[6]), int(i[7]))
         elif x == 'INODE':
             l = list(map(int,i[12:]))
-            ino = inode(int(i[1]), int(i[2]), int(i[3]), int(i[4]), int(i[5]), int(i[6]), int(i[7]), int(i[8]), int(i[9]), int(i[10]), int(i[11]), l)
+            ino = inode(int(i[1]), i[2], int(i[3]), int(i[4]), int(i[5]), int(i[6]), i[7], i[8], i[9], int(i[10]), int(i[11]), l)
             ino_s.append(ino)
         elif x == 'DIRENT':
-            d = directory(int(i[1]), int(i[2]), int(i[3]), int(i[4]), int(i[5]), int(i[6]))
+            d = directory(int(i[1]), int(i[2]), int(i[3]), int(i[4]), int(i[5]), i[6])
             d_s.append(d)
         elif x == 'INDIRECT':
             idir = indirect(int(i[1]), int(i[2]), int(i[3]), int(i[4]), int(i[5]))
