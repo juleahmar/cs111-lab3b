@@ -188,17 +188,7 @@ def all_checks():
                     wrong = 1
 
     ################################
-    #DUPLICATE CHECKING
-    ################################              
-    for i in exist:
-        index = exist[i]
-        if len(index) > 1:
-            for j in index:
-                print("DUPLICATE " + str(j.block_type) + " " + str(j.blocknum) + " IN INODE " + str(j.inode_num) + " AT OFFSET " + str(j.offset))
-                wrong = 1
-
-    ################################
-    #UNREFERENCED CHECKING               
+    #DUPLICATE/UNREFERENCED CHECKING
     ################################
     start = int(sb.inode_size * g_s[0].inum/sb.block_size) + g_s[0].first_inode
     end = g_s[0].bnum
@@ -206,8 +196,11 @@ def all_checks():
         if i not in exist and i not in bfrees:
             print('UNREFERENCED BLOCK ' + str(i))
             wrong = 1
-
-
+        if i in exist and len(exist[i]) >= 2:
+            for j in exist[i]:
+                print('DUPLICATE ' + str(j.block_type) +  ' ' + str(j.block_num) +  ' IN INODE ' + str(j.inode_num) + ' AT OFFSET ' + str(j.offset))
+                wrong = 1
+        
     #################################
     #INODE CHECK STUFF
     #################################
