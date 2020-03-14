@@ -61,11 +61,19 @@ ifrees = []
 bfrees = []
 g_s = []
 
-#sb = superblock(0,0,0,0,0,0,0)
 blocks = 0
 exist = {}
 
 rb = set([0, 1, 2, 3, 4, 5, 6, 7, 64])
+
+def check_unallocated_inode(dirent):
+    if dirent.inode_ref in ifrees:
+        print("DIRECTORY INODE %d NAME %s UNALLOCATED INODE %d" % (dirent.inode_ref, dirent.name[:-1], dirent.inode_ref ))
+
+# FIXME what is the max inode number for the system
+def check_invalid_inode(dirent):
+    if (dirent.inode_ref < 1) or (dirent.inode_ref > sb.inode_size):
+        print("DIRECTORY INODE %d NAME %s INVALID INODE %d" % (dirent.inode_ref, dirent.name[:-1], dirent.inode_ref ))
 
 def all_checks():
     ################################
@@ -204,8 +212,10 @@ def all_checks():
     #################################
     #INODE CHECK STUFF
     #################################
+    allocated_inodes = []
     for inode in ino_s:
         if inode.type in ('f', 'd', 's'):
+            allocated_inodes.append(inode.num)
             # should not be in the free list
             if inode.num in ifrees:
                 print("ALLOCATED INODE %d ON FREELIST" % inode.num)
@@ -215,24 +225,62 @@ def all_checks():
             assert(inode.type is '0')
             if inode.num not in ifrees:
                 print("UNALLOCATED INODE %d NOT ON FREELIST" % inode.num)
+    # FIXME check all ifrees
+    first_usable_inode = 11
+    for i in range(first_usable_inode, sb.inodes):
+        if i not in allocated_inodes:
+            if i not in ifrees:
+                print("UNALLOCATED INODE %d NOT ON FREELIST" % i)
 
     
     #################################
-    #DIRECTORY CHECK STUFF
+    # DIRECTORY CHECK STUFF
     #################################
     # spec:
     # Every allocated I-node should be referred to by the number of directory
     # entries that is equal to the reference count recorded in the I-node. 
 
-    # For any allocated I-node whose reference count does not match the number
-    # of discovered links, an error message like the following should be
-    # generated to stdout:
+    if (False):
+        # For any allocated I-node whose reference count does not match the number
+        # of discovered links, print error
+        for inode_instance in ino_s:
+            found_links = 0
+            for dirent in d_s:
+                if dirent.parent_inode == inode.num:
+                    found_links = found_links + 1
+            if found_links != int(inode_instance.links):
+                print("INODE %d HAS %d LINKS BUT LINKCOUNT IS %d" % (inode.num, found_links, inode.links))
 
-    ##INSERT DIRECTORY CHECKS HERE
+        directory_parents = {}
+        # don't have to count links if the inode number is invalid or unallocated.
+        # inode_to_directory = {}
+        for dirent in d_s:
+            # to keep track of the parents of each inode that is a directory
+            # for every directory that has a valid parent inode
+            # record the parent inode value, using the child inode value as key
+            # that way an inode can pass it's parent_inode as a key
+            # and the dict returns the correct parent inode idx
+            # if the dirents inode_ref for "'..'" does not match it's
+            # parents parents inode idx, then there is data corruption
+            if dirent.parent_inode > 0:
+                directory_parents[dirent.inode_ref] = dirent.parent_inode
+                # directory_parents[dirent.parent_inode] = dirent.parent_inode
 
-
-
-
+        for dirent in d_s:
+            # check both identifying inode of dirent and its parent inode are valid
+            check_invalid_inode(dirent)
+            check_unallocated_inode(dirent)
+            # FIXME check this actually matches any
+            if dirent.name is '"."':
+                if dirent.parent_inode != dirent.inode_ref:
+                    print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, \
+                        dirent.name, dirent.inode_ref, dirent.parent_node))
+            if dirent.name is '".."':
+                # should we be checking dirent's or just inode's here?
+                actual_grandparent_inode = directory_parents[dirent.parent_inode]
+                if actual_grandparent_inode != dirent.inode_ref:
+                    print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, 
+                        dirent.name, dirent.inode_ref, actual_grandparent_inode))
 
 def main():
     global sb
@@ -252,6 +300,7 @@ def main():
         elif x == 'INODE':
             l = list(map(int,i[12:]))
             ino = inode(int(i[1]), i[2], int(i[6]), l)
+            # pdb.set_trace()
             ino_s.append(ino)
         elif x == 'DIRENT':
             d = directory(int(i[1]), int(i[2]), int(i[3]), i[6])
@@ -271,6 +320,7 @@ def main():
         else:
             sys.exit(1)
 
+    assert(g.inum == sb.inodes)
     all_checks()
 
     if not wrong:
