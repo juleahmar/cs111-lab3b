@@ -271,16 +271,15 @@ def all_checks():
         # check both identifying inode of dirent and its parent inode are valid
         check_invalid_inode(dirent)
         check_unallocated_inode(dirent, error_reported)
-        print(dirent.name)
-        pdb.set_trace()
-        if dirent.name is "'.'":
+        if dirent.name == "'.'":
             if dirent.parent_inode != dirent.inode_ref:
                 print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, \
                     dirent.name, dirent.inode_ref, dirent.parent_node))
-        if dirent.name is "'..'":
-            actual_parent_inode = directory_parents[dirent.inode_ref]
+        if dirent.name == "'..'":
+            actual_parent_inode = directory_parents.get(dirent.inode_ref)
+            # a not found None value won't match anything
             if (dirent.parent_inode == actual_parent_inode):
-                print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, dirent.name, dirent.inode_ref, actual_parent_inode))
+                print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (actual_parent_inode, dirent.name, dirent.inode_ref, actual_parent_inode))
             # record
             # uses a directory inode num as a key returns inode num of that directories parent
             directory_parents[dirent.parent_inode] = dirent.inode_ref
