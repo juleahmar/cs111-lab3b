@@ -7,10 +7,10 @@ default:
 	chmod +x lab3b
 
 clean:
-	rm -f *.tar.gz lab3b
+	rm -rf *.tar.gz lab3b
 
-dist: default
-	tar -czvf lab3b-705225374.tar.gz lab3b.py README Makefile lab3b
+dist: clean default
+	tar -czvf lab3b-705225374.tar.gz lab3b.py README Makefile 
 
 test: dist
 	./sanitycheck.sh 705225374
