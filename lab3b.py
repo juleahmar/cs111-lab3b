@@ -69,12 +69,12 @@ rb = set([0, 1, 2, 3, 4, 5, 6, 7, 64])
 def check_unallocated_inode(dirent, error_reported):
     if dirent.inode_ref in ifrees:
         if dirent.inode_ref not in error_reported:
-            print("DIRECTORY INODE %d NAME %s UNALLOCATED INODE %d" % (dirent.parent_inode, dirent.name[:-1], dirent.inode_ref ))
+            print("DIRECTORY INODE %d NAME %s UNALLOCATED INODE %d" % (dirent.parent_inode, dirent.name, dirent.inode_ref ))
 
 # FIXME what is the max inode number for the system
 def check_invalid_inode(dirent):
     if (dirent.inode_ref < 1) or (dirent.inode_ref > sb.inodes):
-        print("DIRECTORY INODE %d NAME %s INVALID INODE %d" % (dirent.parent_inode, dirent.name[:-1], dirent.inode_ref ))
+        print("DIRECTORY INODE %d NAME %s INVALID INODE %d" % (dirent.parent_inode, dirent.name, dirent.inode_ref ))
 
 def all_checks():
     ################################
@@ -271,11 +271,13 @@ def all_checks():
         # check both identifying inode of dirent and its parent inode are valid
         check_invalid_inode(dirent)
         check_unallocated_inode(dirent, error_reported)
-        if dirent.name is '"."':
+        print(dirent.name)
+        pdb.set_trace()
+        if dirent.name is "'.'":
             if dirent.parent_inode != dirent.inode_ref:
                 print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, \
                     dirent.name, dirent.inode_ref, dirent.parent_node))
-        if dirent.name is '".."':
+        if dirent.name is "'..'":
             actual_parent_inode = directory_parents[dirent.inode_ref]
             if (dirent.parent_inode == actual_parent_inode):
                 print("DIRECTORY INODE %d NAME %s LINK TO INODE %d SHOULD BE %d" % (dirent.inode_ref, dirent.name, dirent.inode_ref, actual_parent_inode))
@@ -302,10 +304,9 @@ def main():
         elif x == 'INODE':
             l = list(map(int,i[12:]))
             ino = inode(int(i[1]), i[2], int(i[6]), l)
-            # pdb.set_trace()
             ino_s.append(ino)
         elif x == 'DIRENT':
-            d = directory(int(i[1]), int(i[2]), int(i[3]), i[6])
+            d = directory(int(i[1]), int(i[2]), int(i[3]), i[6][:-1])
             d_s.append(d)
         elif x == 'INDIRECT':
             idir = indirect(int(i[1]), int(i[2]), int(i[3]), int(i[5]))
